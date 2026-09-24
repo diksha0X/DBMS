@@ -1,0 +1,258 @@
+1. Create the tables and insert the data
+Customer table
+CREATE TABLE Customer (
+    Cust_id VARCHAR(3) PRIMARY KEY,
+    Fname VARCHAR(20) NOT NULL,
+    Lname VARCHAR(20) NOT NULL,
+    Area VARCHAR(2) NOT NULL,
+    Phone INT
+);
+Insert Customer data
+INSERT INTO Customer VALUES
+('A01', 'Ivan', 'Ross', 'SA', 6125467),
+('A02', 'Vandana', 'Ray', 'MU', 5560379),
+('A03', 'Pramada', 'Jauguste', 'DA', 4560389),
+('A04', 'Basu', 'Navindi', 'BA', 6125401),
+('A05', 'Ravi', 'Shridhar', 'NA', NULL),
+('A06', 'Rukmini', 'Aiyer', 'GH', 5125274);
+Movie table
+CREATE TABLE Movie (
+    Mv_no INT PRIMARY KEY,
+    Cust_id VARCHAR(3) NOT NULL,
+    Title VARCHAR(30) NOT NULL,
+    Star VARCHAR(2) NOT NULL,
+    Price INT CHECK (Price BETWEEN 100 AND 250),
+    FOREIGN KEY (Cust_id) REFERENCES Customer(Cust_id)
+);
+Insert Movie data
+INSERT INTO Movie VALUES
+(1, 'A02', 'Bloody', 'JC', 181),
+(2, 'A04', 'The Firm', 'TC', 200),
+(3, 'A01', 'Pretty Woman', 'RG', 151),
+(4, 'A06', 'Home Alone', 'MC', 150),
+(5, 'A05', 'The Fugitive', 'MF', 200),
+(6, 'A03', 'Coma', 'MD', 100),
+(7, 'A02', 'Dracula', 'GO', 150),
+(8, 'A06', 'Quick Change', 'BM', 100),
+(9, 'A03', 'Gone with the Wind', 'CB', 200),
+(10, 'A05', 'Carry on Doctor', 'LP', 100);
+
+The assignment specifies the customer/movie structure and sample records shown above. 
+DBMS LAB ASS4 (1)
+
+2. Prove Entity Integrity
+
+Entity integrity means:
+
+Primary key cannot be NULL
+Primary key must be unique
+Check NULL
+INSERT INTO Customer
+VALUES (NULL, 'Test', 'Test', 'AA', 1234567);
+
+Result: Error because Cust_id is a primary key.
+
+Check duplicate
+INSERT INTO Customer
+VALUES ('A01', 'Test', 'Test', 'AA', 1234567);
+
+Result: Error because A01 already exists.
+
+Same applies to Mv_no in Movie because it is also a primary key.
+
+3. Prove Referential Integrity
+
+Movie.Cust_id is a foreign key referencing Customer.Cust_id.
+
+Try:
+
+INSERT INTO Movie
+VALUES (11, 'A99', 'Test', 'AB', 150);
+
+Result: Error because A99 does not exist in Customer.
+
+Therefore, referential integrity is maintained.
+
+4. Prove Domain Integrity in Movie
+
+Price should be between 100 and 250. 
+DBMS LAB ASS4 (1)
+
+Try:
+
+INSERT INTO Movie
+VALUES (11, 'A01', 'Test', 'AB', 300);
+
+Result: Error because 300 is outside the allowed range.
+
+You can also test:
+
+INSERT INTO Movie
+VALUES (11, 'A01', 'Test', 'AB', 50);
+
+Again, error.
+
+5. Movie titles whose price is greater than 100 but less than 200
+SELECT Title
+FROM Movie
+WHERE Price > 100 AND Price < 200;
+
+Expected titles:
+
+Bloody
+Pretty Woman
+Home Alone
+Dracula
+6. Display Cust_id who have seen movies starring JC, TC or MC
+SELECT Cust_id
+FROM Movie
+WHERE Star IN ('JC', 'TC', 'MC');
+
+Expected:
+
+A02
+A04
+A06
+7. Customer details whose Area contains 'A'
+SELECT *
+FROM Customer
+WHERE Area LIKE '%A%';
+
+Expected customers:
+
+A01  Ivan      Ross       SA
+A03  Pramada   Jauguste   DA
+A04  Basu      Navindi    BA
+A05  Ravi      Shridhar   NA
+8. Movie titles whose price is within 180 and title has exactly 6 characters
+SELECT Title
+FROM Movie
+WHERE Price <= 180
+AND CHAR_LENGTH(Title) = 6;
+
+Expected:
+
+Bloody
+Coma
+
+Note: Coma has only 4 characters, so if your teacher means exactly 6 characters, the result is only:
+
+Bloody
+9. Movie name, original price and price after 10% increment
+SELECT Title,
+       Price AS Original_Price,
+       Price * 1.10 AS Incremented_Price
+FROM Movie;
+10. Display customer details in the given sentence format
+
+The assignment wants output like:
+
+Ivan Ross stays in SA and his phone number is 6125467. 
+DBMS LAB ASS4 (1)
+
+Use:
+
+SELECT CONCAT(
+    Fname, ' ', Lname,
+    ' stays in ', Area,
+    ' and his phone number is ', Phone, '.'
+) AS Customer_Details
+FROM Customer;
+11. Add NOT NULL constraint to Lname
+
+Because Lname is already NOT NULL in our creation, if your teacher wants you to add it later, create the table initially without NOT NULL, then use:
+
+ALTER TABLE Customer
+MODIFY Lname VARCHAR(20) NOT NULL;
+12. Display customer whose phone number is not recorded
+SELECT Fname, Lname
+FROM Customer
+WHERE Phone IS NULL;
+
+Expected:
+
+Ravi Shridhar
+13. Add phone number for the person from Question 7
+
+Question 7 returns multiple customers, so if you mean the customer with the missing phone number, that is Ravi Shridhar.
+
+UPDATE Customer
+SET Phone = 9876543
+WHERE Cust_id = 'A05';
+
+You can choose another phone number if your teacher says "according to your own wish." 
+DBMS LAB ASS4 (1)
+
+Check:
+
+SELECT *
+FROM Customer
+WHERE Cust_id = 'A05';
+14. Display unique customer IDs from Movie
+SELECT DISTINCT Cust_id
+FROM Movie;
+
+Expected:
+
+A01
+A02
+A03
+A04
+A05
+A06
+15. Remove NOT NULL constraint from Star
+ALTER TABLE Movie
+MODIFY Star VARCHAR(2) NULL;
+
+Now Star can contain NULL.
+
+16. Delete any row from Customer
+
+Try deleting A01:
+
+DELETE FROM Customer
+WHERE Cust_id = 'A01';
+
+You should get a foreign key constraint error, because A01 is being referenced by Movie.
+
+Movie contains:
+
+Mv_no = 3
+Cust_id = A01
+
+So MySQL prevents deletion.
+
+This demonstrates referential integrity. 
+DBMS LAB ASS4 (1)
+
+17. Delete any row from Movie
+DELETE FROM Movie
+WHERE Mv_no = 10;
+
+This should work because Customer does not reference Movie.
+
+Check:
+
+SELECT * FROM Movie;
+18. Drop Customer table
+
+Try:
+
+DROP TABLE Customer;
+
+If the foreign key still exists in Movie, MySQL will give an error because Movie depends on Customer.
+
+So the expected observation is:
+
+Cannot drop Customer because it is referenced by Movie through the foreign key. 
+DBMS LAB ASS4 (1)
+
+19. Drop Movie table
+DROP TABLE Movie;
+
+
+20. Drop the foreign key from Movie
+
+First find the foreign-key constraint name:
+
+SHOW CREATE TABLE Movie;
